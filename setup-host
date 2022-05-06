@@ -1,6 +1,17 @@
+#! /bin/bash
+
 #############################################################################
 # Gets the operating system type.
 #############################################################################
+#
+HOSTIP=`hostname -I | awk -F " " '{print $1}'`
+
+# Print error information and exit.
+echo_error () {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
 get_os_type() {
   # If /etc/os-release contains NAME="Ubuntu", OS is Ubuntu.
   if [ -f /etc/os-release ];
@@ -12,33 +23,69 @@ get_os_type() {
   fi
 }
 
-clone_base() {
-   git clone git://git.yoctoproject.org/poky  
-}
 
-if [ -z "$ZSH_NAME" ] && [ "x$0" = "x./setup-host" ]; then
-    echo >&2 "Error: This script needs to be sourced. Please run as '. ./setup-host'"
-else
-    if [ -n "$BASH_SOURCE" ]; then
-        layerdir="$(cd "$(dirname "$BASH_SOURCE")" && pwd -P)"
-    elif [ -n "$ZSH_NAME" ]; then
-        layerdir="$(cd "$(dirname "$0")" && pwd -P)"
-    else
-        layerdir="$(pwd -P)"
-    fi
 
-    if [ -f conf/local.conf -o -f conf/bblayers.conf ]; then
-        # Assuming we're already in the build dir
-        BUILDDIR=$PWD
-    else
-        BUILDDIR=$PWD/build
-    fi
-
-    echo $BUILDDIR
-fi
+setup_host () {
 
 get_os_type
 
 # run host specific setup scripts
 $layerdir/scripts/$os_type-setup
 
+echo "Create an User account"
+adduser $USERNAME
+
+if [ $? -eq 0 ]; then
+    echo "Update sudoers"
+    if [ -f /etc/sudoers.d/70-ypsummitstaff ]; then
+        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/70-ypsummitstaff
+    else
+        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/70-ypsummitstaff
+    fi
+
+
+fi
+echo "Each user will need to update their ssh key like"
+echo "sh-copy-id -i ~/.ssh/{pub key} $USERNAME@$HOSTIP"
+
+}
+
+
+description() {
+cat << EOF 
+This tool is used to setup a new hosts needed for the Yocto Project Summits.
+
+Options:
+  -h, --help
+        Display this help and exit.
+
+EOF
+}
+
+
+#====
+
+while getopts "u:h" OPT; do
+    case $OPT in
+      u)
+         USERNAME="$OPTARG"
+	 ;;
+      h)
+         description
+         exit 0
+           ;;
+      *) echo "Invalid option specified: $*"
+         echo_error "Usage: $0 [-h|-help]" 
+           ;;
+    esac
+done
+
+if [ -z "$USERNAME" ]; then
+	echo "ERROR: you must specify an intial user account ."
+	usage
+	exit 1
+fi
+
+setup_host
+
+#====
