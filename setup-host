@@ -1,0 +1,44 @@
+#############################################################################
+# Gets the operating system type.
+#############################################################################
+get_os_type() {
+  # If /etc/os-release contains NAME="Ubuntu", OS is Ubuntu.
+  if [ -f /etc/os-release ];
+  then
+    os_type=`grep '^NAME=\"' /etc/os-release | awk -F "\"" '{print tolower($2)}'`
+  else
+    echo "Error: Check terminated on unsupported operating system type."
+    exitCode=1
+  fi
+}
+
+clone_base() {
+   git clone git://git.yoctoproject.org/poky  
+}
+
+if [ -z "$ZSH_NAME" ] && [ "x$0" = "x./setup-host" ]; then
+    echo >&2 "Error: This script needs to be sourced. Please run as '. ./setup-host'"
+else
+    if [ -n "$BASH_SOURCE" ]; then
+        layerdir="$(cd "$(dirname "$BASH_SOURCE")" && pwd -P)"
+    elif [ -n "$ZSH_NAME" ]; then
+        layerdir="$(cd "$(dirname "$0")" && pwd -P)"
+    else
+        layerdir="$(pwd -P)"
+    fi
+
+    if [ -f conf/local.conf -o -f conf/bblayers.conf ]; then
+        # Assuming we're already in the build dir
+        BUILDDIR=$PWD
+    else
+        BUILDDIR=$PWD/build
+    fi
+
+    echo $BUILDDIR
+fi
+
+get_os_type
+
+# run host specific setup scripts
+$layerdir/scripts/$os_type-setup
+
