@@ -30,7 +30,7 @@ setup_host () {
 get_os_type
 
 # run host specific setup scripts
-$layerdir/scripts/$os_type-setup
+$(pwd -P)/scripts/$os_type-setup
 
 echo "Create an User account"
 adduser $USERNAME
