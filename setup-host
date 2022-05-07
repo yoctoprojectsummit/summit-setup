@@ -16,7 +16,7 @@ get_os_type() {
   # If /etc/os-release contains NAME="Ubuntu", OS is Ubuntu.
   if [ -f /etc/os-release ];
   then
-    os_type=`grep '^NAME=\"' /etc/os-release | awk -F "\"" '{print tolower($2)}'`
+    os_type=`grep '^NAME=\"' /etc/os-release | awk -F "\"" '{print tolower($2)}' | awk -F " " '{print $1}'`
   else
     echo "Error: Check terminated on unsupported operating system type."
     exitCode=1
