@@ -1,0 +1,62 @@
+#! /bin/sh
+
+#############################################################################
+# Gets the will boot strap a given host OS so it can  run the setup-host
+#############################################################################
+#
+
+# Print error information and exit.
+echo_error () {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
+get_os_type() {
+  # If /etc/os-release contains NAME="Ubuntu", OS is Ubuntu.
+  if [ -f /etc/os-release ];
+  then
+    os_type=`grep '^NAME=\"' /etc/os-release | awk -F "\"" '{print tolower($2)}' | awk -F " " '{print $1}'`
+  else
+    echo "Error: Check terminated on unsupported operating system type."
+    exitCode=1
+  fi
+}
+
+
+
+bootstrap_host () {
+
+  get_os_type
+
+  # run host specific setup scripts
+  $(pwd -P)/scripts/$os_type-bootstrap
+}
+
+clone_setup () {
+   git clone https://github.com/akuster/summit-setup.git
+}
+
+run_setup() {
+  cd summit-setup
+  setup-host
+}
+
+
+description() {
+cat << EOF 
+This tool is used to setup a new hosts needed for the Yocto Project Summits.
+
+Options:
+  -h, --help
+        Display this help and exit.
+
+EOF
+}
+
+#====
+
+bootstrap_host
+clone_setup
+run_setup
+
+#====
