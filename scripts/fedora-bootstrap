@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+
+PKGS="git"
+
+echo "Installing packages required to boot strap server for Yocto Summit hands-on"
+$SUDO dnf -y install $PKGS
+echo "Bootstrap complete"

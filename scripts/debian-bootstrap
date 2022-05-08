@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Borrowed from meta-mentor [May 6th, 2022 akuster]
+#
+# Copyright 2007-2021 Siemens Digital Industries Software
+#
+# This file is licensed under the terms of the GNU General Public License
+# version 2.  This program  is licensed "as is" without any warranty of any
+# kind, whether express or implied.
+
+echo "Verifying access to sudo, please enter your password if prompted."
+if [ "$(id -u)" -ne 0 ]; then
+    SUDO=sudo
+    $SUDO -v
+    if [ $? -ne 0 ]; then
+        echo >&2 "Could not use sudo, exiting"
+        exit 1
+    fi
+else
+    SUDO=
+fi
+
+PKGS="git"
+
+echo "Installing packages required to build Yocto Summit hands-on"
+$SUDO apt-get update
+$SUDO apt-get -y install $PKGS
+
+echo "Bootstrap complete"
