@@ -7,6 +7,18 @@
 
 CLONE_DIR="summit-setup"
 
+echo "Verifying access to sudo, please enter your password if prompted."
+if [ "$(id -u)" -ne 0 ]; then
+    SUDO=sudo
+    $SUDO -v
+    if [ $? -ne 0 ]; then
+        echo >&2 "Could not use sudo, exiting"
+        exit 1
+    fi
+else
+    SUDO=
+fi
+
 # Print error information and exit.
 echo_error () {
   echo "ERROR: $1" >&2
@@ -30,7 +42,21 @@ bootstrap_host () {
   get_os_type
 
   # run host specific boot strap setup scripts
-  $(pwd -P)/scripts/$os_type-bootstrap
+
+  echo "Installing packages required to boot strap server for Yocto Summit hands-on"
+
+  case $os_type in
+      debian)
+        PKGS="git"
+        $SUDO apt-get update
+        $SUDO apt-get -y install $PKGS
+      ;;
+      fedora)
+        PKGS="git"
+        $SUDO dnf -y install $PKGS
+      ;;
+  esac
+  echo "Bootstrap complete"
 }
 
 clone_setup () {
@@ -43,6 +69,7 @@ clone_setup () {
 }
 
 run_setup() {
+  cd $CLONE_DIR
   sh setup-host -u USERNAME $1
 }
 
@@ -84,9 +111,8 @@ fi
 
 #====
 
-clone_setup
-cd $CLONE_DIR
 bootstrap_host
-uun_setup $USERNAME
+clone_setup
+run_setup $USERNAME
 
 #====
