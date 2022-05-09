@@ -107,17 +107,13 @@ while getopts "u:h" OPT; do
   esac
 done
 
-if [ -z "$USERNAME" ]; then
-  echo "ERROR: you must specify an intial user account ."
-  usage
-  exit 1
-fi
-
-
 #====
 
 bootstrap_host
 clone_setup
-run_setup $USERNAME
-
+if [ -z "$USERNAME" ]; then
+  run_setup
+else
+  run_setup $USERNAME
+fi
 #====
