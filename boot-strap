@@ -56,7 +56,7 @@ bootstrap_host () {
         $SUDO dnf -y install $PKGS
       ;;
       centos)
-        PKGS="epel-release"
+        PKGS="epel-release git"
         $SUDO dnf -y install $PKGS
         $SUDO makecache
       ;;
