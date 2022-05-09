@@ -27,28 +27,28 @@ get_os_type() {
 
 setup_host () {
 
-get_os_type
+  get_os_type
 
-# run host specific setup scripts
-$(pwd -P)/scripts/$os_type-setup
+  # run host specific setup scripts
+  $(pwd -P)/scripts/$os_type-setup
 
-echo "Create an User account"
-useradd $USERNAME
-passwd $USERNAME
+  if [ -z "$USSENAME" ]; 
+  then
+    echo "Create an User account"
+    useradd $USERNAME
+    passwd $USERNAME
 
-if [ $? -eq 0 ]; then
-    echo "Update sudoers"
-    if [ -f /etc/sudoers.d/70-ypsummitstaff ]; then
-        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/70-ypsummitstaff
-    else
-        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/70-ypsummitstaff
+    if [ $? -eq 0 ]; then
+      echo "Update sudoers"
+      if [ -f /etc/sudoers.d/70-ypsummitstaff ]; then
+          echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/70-ypsummitstaff
+      else
+          echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/70-ypsummitstaff
+      fi
     fi
-
-
-fi
-echo "Each user will need to update their ssh key like"
-echo "ssh-copy-id -i ~/.ssh/{pub key} $USERNAME@$HOSTIP"
-
+    echo "Each user will need to update their ssh key like"
+    echo "ssh-copy-id -i ~/.ssh/{pub key} $USERNAME@$HOSTIP"
+  fi
 }
 
 
@@ -80,12 +80,6 @@ while getopts "u:h" OPT; do
            ;;
     esac
 done
-
-if [ -z "$USERNAME" ]; then
-	echo "ERROR: you must specify an intial user account ."
-	usage
-	exit 1
-fi
 
 setup_host
 
