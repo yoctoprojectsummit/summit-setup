@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+
+echo "Verifying access to sudo, please enter your password if prompted."
+if [ "$(id -u)" -ne 0 ]; then
+    SUDO=sudo
+    $SUDO -v
+    if [ $? -ne 0 ]; then
+        echo >&2 "Could not use sudo, exiting"
+        exit 1
+    fi
+else
+    SUDO=
+fi
+
+PKGS="gawk make wget tar bzip2 gzip python3 unzip perl patch diffutils diffstat git cpp gcc gcc-c++ glibc-devel texinfo chrpath ccache socat perl-Data-Dumper perl-Text-ParseWords perl-Thread-Queue python3-pip python3-GitPython python3-jinja2 python3-pexpect xz which SDL-devel xterm rpcgen mesa-libGL-devel zstd lz4"
+
+echo "Installing packages required to build Yocto Summit hands-on"
+$SUDO dnf -y install $PKGS
+
+echo "Setup complete"

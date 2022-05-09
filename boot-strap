@@ -55,6 +55,11 @@ bootstrap_host () {
         PKGS="git"
         $SUDO dnf -y install $PKGS
       ;;
+      centos)
+        PKGS="epel-release"
+        $SUDO dnf -y install $PKGS
+        $SUDO makecache
+      ;;
   esac
   echo "Bootstrap complete"
 }
