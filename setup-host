@@ -46,7 +46,7 @@ if [ $? -eq 0 ]; then
 
 fi
 echo "Each user will need to update their ssh key like"
-echo "sh-copy-id -i ~/.ssh/{pub key} $USERNAME@$HOSTIP"
+echo "ssh-copy-id -i ~/.ssh/{pub key} $USERNAME@$HOSTIP"
 
 }
 

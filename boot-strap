@@ -70,7 +70,7 @@ clone_setup () {
 
 run_setup() {
   cd $CLONE_DIR
-  sh setup-host -u USERNAME $1
+  sh setup-host -u $1
 }
 
 
