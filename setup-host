@@ -1,0 +1,86 @@
+#! /bin/bash
+
+#############################################################################
+# Gets the operating system type.
+#############################################################################
+#
+HOSTIP=`hostname -I | awk -F " " '{print $1}'`
+
+# Print error information and exit.
+echo_error () {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
+get_os_type() {
+  # If /etc/os-release contains NAME="Ubuntu", OS is Ubuntu.
+  if [ -f /etc/os-release ];
+  then
+    os_type=`grep '^NAME=\"' /etc/os-release | awk -F "\"" '{print tolower($2)}' | awk -F " " '{print $1}'`
+  else
+    echo "Error: Check terminated on unsupported operating system type."
+    exitCode=1
+  fi
+}
+
+
+
+setup_host () {
+
+  get_os_type
+
+  # run host specific setup scripts
+  $(pwd -P)/scripts/$os_type-setup
+
+  if [ -z "$USSENAME" ]; 
+  then
+    echo "Create an User account"
+    useradd $USERNAME
+    passwd $USERNAME
+
+    if [ $? -eq 0 ]; then
+      echo "Update sudoers"
+      if [ -f /etc/sudoers.d/70-ypsummitstaff ]; then
+          echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/70-ypsummitstaff
+      else
+          echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/70-ypsummitstaff
+      fi
+    fi
+    echo "Each user will need to update their ssh key like"
+    echo "ssh-copy-id -i ~/.ssh/{pub key} $USERNAME@$HOSTIP"
+  fi
+}
+
+
+description() {
+cat << EOF 
+This tool is used to setup a new hosts needed for the Yocto Project Summits.
+
+Options:
+  -h, --help
+        Display this help and exit.
+
+EOF
+}
+
+
+#====
+
+while getopts "u:h" OPT; do
+    case $OPT in
+      u)
+         USERNAME="$OPTARG"
+	 ;;
+      h)
+         description
+         exit 0
+           ;;
+      *) echo "Invalid option specified: $*"
+         echo_error "Usage: $0 [-h|-help]" 
+           ;;
+    esac
+done
+
+setup_host
+
+#====

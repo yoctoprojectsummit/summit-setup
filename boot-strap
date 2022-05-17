@@ -1,0 +1,119 @@
+#! /bin/sh
+
+#############################################################################
+# Gets the will boot strap a given host OS so it can  run the setup-host
+#############################################################################
+#
+
+CLONE_DIR="summit-setup"
+
+echo "Verifying access to sudo, please enter your password if prompted."
+if [ "$(id -u)" -ne 0 ]; then
+    SUDO=sudo
+    $SUDO -v
+    if [ $? -ne 0 ]; then
+        echo >&2 "Could not use sudo, exiting"
+        exit 1
+    fi
+else
+    SUDO=
+fi
+
+# Print error information and exit.
+echo_error () {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
+get_os_type() {
+  # If /etc/os-release contains NAME="Ubuntu", OS is Ubuntu.
+  if [ -f /etc/os-release ];
+  then
+    os_type=`grep '^NAME=\"' /etc/os-release | awk -F "\"" '{print tolower($2)}' | awk -F " " '{print $1}'`
+  else
+    echo_error "Error: Check terminated on unsupported operating system type."
+  fi
+}
+
+
+
+bootstrap_host () {
+
+  get_os_type
+
+  # run host specific boot strap setup scripts
+
+  echo "Installing packages required to boot strap server for Yocto Summit hands-on"
+
+  case $os_type in
+      debian)
+        PKGS="git"
+        $SUDO apt-get update
+        $SUDO apt-get -y install $PKGS
+      ;;
+      fedora)
+        PKGS="git"
+        $SUDO dnf -y install $PKGS
+      ;;
+      centos)
+        PKGS="epel-release git"
+        $SUDO dnf -y install $PKGS
+        $SUDO makecache
+      ;;
+  esac
+  echo "Bootstrap complete"
+}
+
+clone_setup () {
+  if [ -d $CLONE_DIR ];
+  then
+     rm -fr $CLONE_DIR
+  fi
+
+  git clone https://github.com/akuster/summit-setup.git $CLONE_DIR
+}
+
+run_setup() {
+  cd $CLONE_DIR
+  sh setup-host -u $1
+}
+
+
+description() {
+cat << EOF 
+This tool is used to setup a new hosts needed for the Yocto Project Summits.
+
+Options:
+  -h, --help
+        Display this help and exit.
+
+EOF
+}
+
+
+while getopts "u:h" OPT; do
+  case $OPT in
+    u)
+      USERNAME="$OPTARG"
+    ;;
+    h)
+      description
+      exit 0
+    ;;
+
+    *) echo "Invalid option specified: $*"
+      echo_error "Usage: $0 [-h|-help]"
+    ;;
+  esac
+done
+
+#====
+
+bootstrap_host
+clone_setup
+if [ -z "$USERNAME" ]; then
+  run_setup
+else
+  run_setup $USERNAME
+fi
+#====
